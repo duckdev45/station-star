@@ -1,0 +1,137 @@
+@import "tailwindcss";
+
+/* ---------- 品牌色票與字體 ---------- */
+@theme {
+  --font-serif: "Noto Serif TC", "Songti TC", "PMingLiU", "Source Han Serif TC", serif;
+  --font-sans: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", "Heiti TC", system-ui, sans-serif;
+
+  --color-umber: #1d1611;
+  --color-umber-line: #4a3a2e;
+  --color-on-umber: #efe5d3;
+  --color-on-umber-2: #b9a891;
+  --color-dim: #8c7d6c;
+  --color-gold: #dba53c;
+  --color-gold-soft: #ecc67a;
+  --color-maroon: #7a2a1e;
+  --color-maroon-hover: #8f3526;
+  --color-cocoa: #2a211b;
+  --color-cream-ui: #f3ead9;
+
+  /* md = 900px（桌機雙欄），xl = 1100px（較寬鬆的留白） */
+  --breakpoint-md: 56.25rem;
+  --breakpoint-xl: 68.75rem;
+}
+
+/* 面板色會跟著淺色／深色主題切換，所以用 CSS 變數再映射成 Tailwind 色名 */
+@theme inline {
+  --color-stone: var(--stone);
+  --color-paper: var(--paper);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-line: var(--line);
+  --color-occ: var(--occ);
+  --color-occ-bg: var(--occ-bg);
+  --color-chip: var(--chip);
+  --color-on-chip: var(--on-chip);
+  --color-floor-num: var(--floor-num);
+}
+
+:root {
+  --stone: #e4ded4; --paper: #f3efe8; --ink: #271f19; --ink-2: #5c5147; --line: #c9bfb1;
+  --occ: #6f6861; --occ-bg: #e2ddd6; --chip: #2a211b; --on-chip: #f3ead9; --floor-num: #7a2a1e;
+  --focus: #1f5fbf;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --stone: #2b2520; --paper: #352e28; --ink: #efe7da; --ink-2: #bcae9c; --line: #54483d;
+    --occ: #a39a90; --occ-bg: #3b342e; --chip: #efe5d3; --on-chip: #2a211b; --floor-num: #ecc67a; --focus: #8fb6ff;
+  }
+}
+:root[data-theme="dark"] {
+  --stone: #2b2520; --paper: #352e28; --ink: #efe7da; --ink-2: #bcae9c; --line: #54483d;
+  --occ: #a39a90; --occ-bg: #3b342e; --chip: #efe5d3; --on-chip: #2a211b; --floor-num: #ecc67a; --focus: #8fb6ff;
+}
+
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+body { @apply bg-umber text-ink font-sans antialiased; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+@layer components {
+  /* 舞台背景：黃昏天空 */
+  .dusk { background: radial-gradient(90% 60% at 50% 14%, #5d3c25 0%, #3a281c 38%, var(--color-umber) 72%); }
+
+  /* ---------- 大樓與樓層抽出 ---------- */
+  .tower-base { transition: opacity .25s ease; }
+  [data-mode="idle"] .tower-base { opacity: .9; }
+  [data-mode="hover"] .tower-base { opacity: .45; }
+  .tower-slice { transition: transform .26s cubic-bezier(.2, .7, .2, 1); }
+  .tower-slice-edge { fill: none; stroke: var(--color-gold-soft); stroke-width: 1.2; vector-effect: non-scaling-stroke; }
+  .tower-slice.is-occ .tower-slice-edge { stroke: #c9bfb2; stroke-dasharray: 3 3; }
+  .tower-hit { fill: transparent; cursor: pointer; pointer-events: all; }
+
+  /* 樓層列：左側引線 */
+  .floor-row::before {
+    content: ""; position: absolute; left: -14px; top: 50%; width: 22px; height: 1px;
+    background: var(--color-umber-line); transition: background .2s, width .2s, left .2s;
+  }
+  .floor-row.is-active::before { background: var(--color-gold-soft); width: 34px; left: -26px; }
+
+  .zone-bracket { writing-mode: vertical-rl; }
+
+  /* ---------- 星：進場 + 明滅 ---------- */
+  .star { opacity: 0; }
+  .star .glow, .star .rays { transform-box: fill-box; transform-origin: center; }
+  .star.is-in { animation: star-in 1.5s cubic-bezier(.2, .8, .25, 1) .35s both, star-twinkle 7s ease-in-out 1.85s infinite; }
+  .star.is-in .glow { animation: star-flare 1.9s ease-out .35s both; }
+  .star.is-in .rays { animation: star-rays 1.3s cubic-bezier(.2, .8, .25, 1) .45s both; }
+
+  /* ---------- 3D 標籤（由 engine 直接建立 DOM） ---------- */
+  .lb { position: absolute; left: 0; top: 0; white-space: nowrap; font-size: 12px; line-height: 1.3; text-align: center; will-change: transform; }
+  .lb-core { color: #5e544b; font-size: 11px; background: rgb(255 255 255 / .72); padding: 1px 6px; border-radius: 3px; }
+  .lb-pin {
+    width: 22px; height: 22px; border-radius: 50%; background: #2a211b; color: #f3ead9; font-size: 12px; font-weight: 700;
+    display: grid; place-items: center; box-shadow: 0 0 0 2px rgb(255 255 255 / .85), 0 2px 6px rgb(30 18 8 / .3);
+  }
+  .lb-unit { font-size: 13px; padding: 6px 11px; border-radius: 4px; background: #2a211b; color: #f3ead9; box-shadow: 0 4px 14px rgb(30 18 8 / .25); }
+  .lb-unit b { font-family: var(--font-serif); font-size: 16px; margin-right: 6px; }
+  .lb-unit em { font-style: normal; margin-left: 8px; padding-left: 8px; border-left: 1px solid #6b5a4b; color: var(--color-gold-soft); }
+  .lb-unit.occ { background: #ece8e2; color: #4f4842; }
+  .lb-unit.occ em { color: #6f6861; border-color: #bdb4aa; }
+
+  .no-scrollbar { scrollbar-width: none; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+
+  /* 品牌標誌依主題切換 */
+  .mark-dark { display: none; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .mark-light { display: none; }
+    :root:not([data-theme="light"]) .mark-dark { display: inline; }
+  }
+  :root[data-theme="dark"] .mark-light { display: none; }
+  :root[data-theme="dark"] .mark-dark { display: inline; }
+}
+
+@keyframes star-in {
+  0% { opacity: 0; transform: scale(.25) rotate(-50deg); }
+  55% { opacity: .9; transform: scale(1.12) rotate(4deg); }
+  100% { opacity: .52; transform: none; }
+}
+@keyframes star-rays { 0% { transform: scale(.15); } 100% { transform: none; } }
+@keyframes star-flare {
+  0% { opacity: 0; transform: scale(.3); }
+  35% { opacity: 1; transform: scale(1.9); }
+  100% { opacity: .75; transform: none; }
+}
+@keyframes star-twinkle { 0%, 100% { opacity: .52; } 50% { opacity: .66; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .tower-slice, .tower-base, .floor-row::before { transition: none; }
+  .star, .star.is-in, .star.is-in .glow, .star.is-in .rays { animation: none; opacity: .52; }
+}
+
+/* 桌機：一頁式雙欄，左右各自捲動 */
+@media (min-width: 56.25rem) {
+  html, body, #root { height: 100%; }
+}
