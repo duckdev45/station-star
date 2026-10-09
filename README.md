@@ -78,7 +78,7 @@ tools/tower-cutout/         外觀去背與樓層多邊形產生器（Python）
 
 ## 換外觀圖
 
-目前用的是官網截圖（386px 寬），放大會有點糊。拿到同角度的高解析渲染圖後：
+目前用的是招租 DM 裁出的外觀（`tools/tower-cutout/flyer-render.png`，約 1.3 倍於原官網截圖的解析度）。若拿到同角度的高解析渲染圖：
 
 ```bash
 cd tools/tower-cutout
